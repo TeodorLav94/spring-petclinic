@@ -15,6 +15,13 @@
 
   <name>petclinic</name>
 
+  <scm>
+    <url>https://github.com/TeodorLav94/spring-petclinic</url>
+    <connection>scm:git:https://github.com/TeodorLav94/spring-petclinic.git</connection>
+    <developerConnection>scm:git:git@github.com:TeodorLav94/spring-petclinic.git</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
+
   <properties>
 
     <!-- Generic properties -->
