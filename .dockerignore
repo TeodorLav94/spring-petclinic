@@ -1,0 +1,8 @@
+# .dockerignore
+.git
+.gitignore
+target/*
+!target/spring-petclinic-*.jar
+**/.idea
+**/.vscode
+
