@@ -11,7 +11,7 @@
 
   <groupId>org.springframework.samples</groupId>
   <artifactId>spring-petclinic</artifactId>
-  <version>4.0.0-SNAPSHOT</version>
+  <version>4.0.1-SNAPSHOT</version>
 
   <name>petclinic</name>
 
@@ -19,7 +19,7 @@
     <url>https://github.com/TeodorLav94/spring-petclinic</url>
     <connection>scm:git:https://github.com/TeodorLav94/spring-petclinic.git</connection>
     <developerConnection>scm:git:git@github.com:TeodorLav94/spring-petclinic.git</developerConnection>
-    <tag>v4.0.0</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <properties>
@@ -29,7 +29,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <!-- Important for reproducible builds. Update using e.g. ./mvnw versions:set -DnewVersion=... -->
-    <project.build.outputTimestamp>2025-08-11T12:57:24Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2025-08-22T10:49:16Z</project.build.outputTimestamp>
 
     <!-- Web dependencies -->
     <webjars-locator.version>1.1.0</webjars-locator.version>
@@ -451,4 +451,14 @@
       </build>
     </profile>
   </profiles>
+  <distributionManagement>
+    <repository>
+      <id>nexus-releases-teo</id>
+      <url>http://localhost:8081/repository/maven-releases-teo/</url>
+    </repository>
+    <snapshotRepository>
+      <id>nexus-snapshots-teo</id>
+      <url>http://localhost:8081/repository/maven-snapshots-teo/</url>
+    </snapshotRepository>
+  </distributionManagement>
 </project>
