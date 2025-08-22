@@ -451,4 +451,14 @@
       </build>
     </profile>
   </profiles>
+  <distributionManagement>
+    <repository>
+      <id>nexus-releases-teo</id>
+      <url>http://localhost:8081/repository/maven-releases-teo/</url>
+    </repository>
+    <snapshotRepository>
+      <id>nexus-snapshots-teo</id>
+      <url>http://localhost:8081/repository/maven-snapshots-teo/</url>
+    </snapshotRepository>
+  </distributionManagement>
 </project>
