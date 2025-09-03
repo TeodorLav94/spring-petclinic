@@ -29,5 +29,13 @@ pipeline {
         junit 'target/surefire-reports/*.xml'
       }
     }
+    stage('Build (skip tests)') {
+      when { not { branch 'main' } }   // doar pe MR/feature
+      steps {
+        sh 'chmod +x mvnw || true'
+        sh './mvnw -B -DskipTests package'
+        archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+      }
+    }
   }
 }
