@@ -16,7 +16,7 @@ USER spring
 
 WORKDIR /app
 
-COPY --chown=spring:spring target/spring-petclinic-*.jar app.jar
+COPY --from=build --chown=spring:spring /src/target/spring-petclinic-*.jar app.jar
 
 EXPOSE 8080
 ENV JAVA_OPTS=""
