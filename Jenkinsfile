@@ -20,5 +20,14 @@ pipeline {
         // recordIssues tools: [checkStyle(pattern: 'target/checkstyle-result.xml')]
       }
     }
+    stage('Test') {
+      when { not { branch 'main' } }   // doar pe MR/feature
+      steps {
+        sh 'chmod +x mvnw || true'
+        sh './mvnw -B test'
+         // Publică rapoartele JUnit în Jenkins
+        junit 'target/surefire-reports/*.xml'
+      }
+    }
   }
 }
