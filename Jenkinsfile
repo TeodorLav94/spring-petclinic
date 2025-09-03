@@ -37,5 +37,23 @@ pipeline {
         archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
       }
     }
+    stage('Docker Build & Push (MR)') {
+      when { not { branch 'main' } }   // rulează doar pe MR/feature
+      steps {
+        script {
+          def gitShort = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
+          def imageTag = "192.168.64.3:5002/mr/spring-petclinic:${gitShort}"
+
+          withCredentials([usernamePassword(credentialsId: 'docker-reg-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PWD')]) {
+            sh """
+              echo "$DOCKER_PWD" | docker login 192.168.64.3:5002 -u "$DOCKER_USER" --password-stdin
+              docker build -t "${imageTag}" .
+              docker push "${imageTag}"
+              docker logout 192.168.64.3:5002
+            """
+          }
+        }
+      }
+    }
   }
 }
