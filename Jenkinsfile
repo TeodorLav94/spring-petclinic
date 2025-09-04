@@ -64,5 +64,23 @@ pipeline {
         }
       }
     }
+    stage('Docker Build & Push (MAIN)') {
+      when { branch 'main' }
+      steps {
+        script {
+          def gitShort = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
+          def imageMain = "192.168.64.3:5002/main/spring-petclinic:${gitShort}"
+
+          withCredentials([usernamePassword(credentialsId: 'docker-reg-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PWD')]) {
+            sh """
+              echo "$DOCKER_PWD" | docker login 192.168.64.3:5002 -u "$DOCKER_USER" --password-stdin
+              docker build -t "${imageMain}" .
+              docker push "${imageMain}"
+              docker logout 192.168.64.3:5002
+            """
+          }
+        }
+      }
+    }
   }
 }
