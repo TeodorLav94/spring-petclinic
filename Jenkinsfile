@@ -20,23 +20,13 @@ pipeline {
         // recordIssues tools: [checkStyle(pattern: 'target/checkstyle-result.xml')]
       }
     }
-    stage('Test (unit only)') {
-      when { not { branch 'main' } }
+    stage('Test') {
+      when { not { branch 'main' } }   // doar pe MR/feature
       steps {
         sh 'chmod +x mvnw || true'
-        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-          // rulează doar testele unitare; excludem *IntegrationTests și *IT
-          sh './mvnw -B -Dtest="**/*Test.java,**/*Tests.java,!**/*IntegrationTests.java,!**/*IT.java" test'
-        }
-        junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
-        archiveArtifacts artifacts: 'target/surefire-reports/**', allowEmptyArchive: true, fingerprint: true
-        sh '''
-          if ls target/surefire-reports/*-errors.txt >/dev/null 2>&1; then
-            echo "==== FAILING TESTS (first 200 lines) ===="
-            sed -n "1,200p" target/surefire-reports/*-errors.txt || true
-            echo "========================================="
-          fi
-        '''
+        sh './mvnw -B test'
+         // Publică rapoartele JUnit în Jenkins
+        junit 'target/surefire-reports/*.xml'
       }
     }
     stage('Build (skip tests)') {
