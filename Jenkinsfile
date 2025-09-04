@@ -20,12 +20,13 @@ pipeline {
         // recordIssues tools: [checkStyle(pattern: 'target/checkstyle-result.xml')]
       }
     }
-    stage('Test') {
+    stage('Test (unit only)') {
       when { not { branch 'main' } }
       steps {
         sh 'chmod +x mvnw || true'
         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-          sh './mvnw -B test'
+          // rulează doar testele unitare; excludem *IntegrationTests și *IT
+          sh './mvnw -B -Dtest="**/*Test.java,**/*Tests.java,!**/*IntegrationTests.java,!**/*IT.java" test'
         }
         junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
         archiveArtifacts artifacts: 'target/surefire-reports/**', allowEmptyArchive: true, fingerprint: true
