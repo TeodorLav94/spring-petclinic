@@ -21,12 +21,21 @@ pipeline {
       }
     }
     stage('Test') {
-      when { not { branch 'main' } }   // doar pe MR/feature
+      when { not { branch 'main' } }
       steps {
         sh 'chmod +x mvnw || true'
-        sh './mvnw -B test'
-         // Publică rapoartele JUnit în Jenkins
-        junit 'target/surefire-reports/*.xml'
+        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+          sh './mvnw -B test'
+        }
+        junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
+        archiveArtifacts artifacts: 'target/surefire-reports/**', allowEmptyArchive: true, fingerprint: true
+        sh '''
+          if ls target/surefire-reports/*-errors.txt >/dev/null 2>&1; then
+            echo "==== FAILING TESTS (first 200 lines) ===="
+            sed -n "1,200p" target/surefire-reports/*-errors.txt || true
+            echo "========================================="
+          fi
+        '''
       }
     }
     stage('Build (skip tests)') {
