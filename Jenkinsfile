@@ -23,23 +23,12 @@ pipeline {
       steps {
         sh 'chmod +x mvnw || true'
         sh '''
-          set +e
-          ./mvnw -B -Dtest="**/*Test.java,**/*Tests.java,!**/*IntegrationTests.java,!**/*IT.java" test
-          echo "[INFO] mvn test finished, ignoring failures"
-          exit 0
+          set -e
+          printf "**/*IT.java\n**/*ITCase.java\n**/*IntegrationTest.java\n**/*IntegrationTests.java\n" > ci-excludes.txt
+          ./mvnw -B -Dsurefire.excludesFile=ci-excludes.txt -DfailIfNoTests=false test
         '''
-        junit testResults: 'target/surefire-reports/*.xml',
-              allowEmptyResults: true,
-              skipMarkingBuildUnstable: true
-        archiveArtifacts artifacts: 'target/surefire-reports/**',
-                         allowEmptyArchive: true, fingerprint: true
-        sh '''
-          if ls target/surefire-reports/*-errors.txt >/dev/null 2>&1; then
-            echo "==== FAILING TESTS (first 200 lines) ===="
-            sed -n "1,200p" target/surefire-reports/*-errors.txt || true
-            echo "========================================="
-          fi
-        '''
+        junit testResults: 'target/surefire-reports/*.xml', allowEmptyResults: true
+        archiveArtifacts artifacts: 'target/surefire-reports/**', allowEmptyArchive: true, fingerprint: true
       }
     }
 
