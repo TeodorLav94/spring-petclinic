@@ -18,20 +18,30 @@ pipeline {
                          onlyIfSuccessful: false
       }
     }
-
     stage('Test (unit only)') {
       steps {
         sh 'chmod +x mvnw || true'
         sh '''
           set -e
           printf "**/*IT.java\n**/*ITCase.java\n**/*IntegrationTest.java\n**/*IntegrationTests.java\n" > ci-excludes.txt
-          ./mvnw -B -Dsurefire.excludesFile=ci-excludes.txt -DfailIfNoTests=false test
+ 
+          export SPRING_SQL_INIT_MODE=always
+          export SPRING_JPA_DEFER_DATASOURCE_INITIALIZATION=true
+          export SPRING_PROFILES_ACTIVE=h2
+
+          set +e
+          ./mvnw -B \
+            -Dsurefire.excludesFile=ci-excludes.txt \
+            -DfailIfNoTests=false \
+            test
+          TEST_EXIT=$?
+          echo "[INFO] mvn test exit code: $TEST_EXIT"
+          exit $TEST_EXIT
         '''
         junit testResults: 'target/surefire-reports/*.xml', allowEmptyResults: true
-        archiveArtifacts artifacts: 'target/surefire-reports/**', allowEmptyArchive: true, fingerprint: true
+        archiveArtifacts artifacts: 'target/surefire-reports/** ci-excludes.txt', allowEmptyArchive: true, fingerprint: true
       }
     }
-
     stage('Build (skip tests)') {
       steps {
         sh 'chmod +x mvnw || true'
