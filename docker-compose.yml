@@ -1,3 +1,5 @@
+version: '3.7'
+
 services:
   mysql:
     image: mysql:8.4
@@ -17,15 +19,45 @@ services:
       start_period: 10s
 
   app:
-    image: spring-petclinic:ms
-    build: .
+    image: my-petclinic-jmx 
+    container_name: petclinic-app
     depends_on:
       mysql:
         condition: service_healthy   
     ports:
       - "8080:8080"
+      - "9099:9099" 
     environment:
       SPRING_PROFILES_ACTIVE: mysql
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/petclinic?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: petclinic
       SPRING_DATASOURCE_PASSWORD: petclinic
+    
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml 
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    depends_on:
+      - app 
+    restart: always
+    extra_hosts:
+    - "dockerhost:172.17.0.1"
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus 
+    restart: always
+
+volumes:
+  grafana-data:

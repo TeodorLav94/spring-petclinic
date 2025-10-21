@@ -1,0 +1,31 @@
+# jmx_exporter_config.yaml
+---
+rules:
+# Metrica 1: Mapare Fortata CPU Load (de la Micrometer)
+# Aceasta forțează ca metrica process_cpu_seconds_total să fie redenumită.
+- pattern: "process_cpu_seconds_total"
+  name: "java_lang_OperatingSystem_CpuLoad"
+  type: COUNTER
+  
+# Metrica 2: Mapare Fortata Heap Memory (de la Micrometer)
+- pattern: "jvm_memory_bytes_used<area=heap>"
+  name: "java_lang_Memory_HeapMemoryUsage_used"
+  type: GAUGE
+
+# Metrica 3: Mapare Fortata Uptime (de la Micrometer)
+- pattern: "process_start_time_seconds"
+  name: "java_lang_Runtime_Uptime"
+  type: GAUGE
+
+# Metrica 4: Mapare Fortata Free Memory (de la Micrometer)
+- pattern: "process_resident_memory_bytes"
+  name: "java_lang_OperatingSystem_FreeMemorySize"
+  type: GAUGE
+  
+# Regulile originale (le păstrăm de dragul coerenței, dar nu sunt critice acum)
+- pattern: "java.lang<type=OperatingSystem>(CpuLoad|FreeMemorySize)"
+  name: "java_lang_OperatingSystem_$1"
+  type: GAUGE
+
+- pattern: "java.lang<type=Runtime, name=>(Uptime)"
+  name: "java_lang_Runtime_$1"
