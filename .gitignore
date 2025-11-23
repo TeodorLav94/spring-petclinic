@@ -49,3 +49,10 @@ out/
 _site/
 *.css
 !petclinic.css
+
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+secrets.auto.tfvars
+target/
+.terraform.lock.hcl
