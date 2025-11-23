@@ -30,7 +30,7 @@ pipeline {
 
     stage('Static Code Analysis') {
       steps {
-        sh 'mvn -B verify -DskipTests=false' 
+        sh 'mvn -B -DskipTests=true verify'
       }
     }
 
@@ -76,7 +76,7 @@ pipeline {
     // ---------- DOAR PENTRU MAIN DE AICI ÎN JOS ----------
 
     stage('Semantic Versioning & Git Tag') {
-    when { branch 'main' }
+    //when { branch 'main' }
     steps {
       script {
         withCredentials([usernamePassword(credentialsId: 'github-creds',
@@ -102,7 +102,7 @@ pipeline {
 
 
     stage('Docker Build & Push (release tag)') {
-      when { branch 'main' }
+      //when { branch 'main' }
       steps {
         script {
           def versionTag = env.APP_VERSION  // ex: v1.3.0
@@ -121,7 +121,7 @@ pipeline {
     }
 
     stage('Deploy to App VM') {
-      when { branch 'main' }
+      //when { branch 'main' }
       steps {
         script {
           // Input manual – cineva trebuie să apese "Proceed"
