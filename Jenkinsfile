@@ -18,7 +18,7 @@ pipeline {
     DB_PRIVATE_IP = "10.20.0.3"
     DB_USER       = "petclinicuser"
 
-    APP_URL       = "https://34.54.225.119"
+    APP_URL       = "http://34.54.225.119"
   }
 
   stages {
