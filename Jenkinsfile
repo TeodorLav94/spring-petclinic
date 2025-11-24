@@ -12,7 +12,7 @@ pipeline {
     IMAGE_BASE = "${GAR_REGION}-docker.pkg.dev/${PROJECT_ID}/${GAR_REPO}/${IMAGE_NAME}"
     
      // App VM (Terraform output)
-    APP_VM_IP    = "34.140.59.138" 
+    APP_VM_IP    = "10.10.0.2" 
 
     // Cloud SQL (Terraform output)
     DB_PRIVATE_IP = "10.20.0.3"
@@ -124,11 +124,7 @@ pipeline {
       //when { branch 'main' }
       steps {
         script {
-          // Input manual – cineva trebuie să apese "Proceed"
           input message: "Deploy version ${env.APP_VERSION} to production?"
-
-          // Presupunem că ai un credential SSH cu id 'app-vm-ssh'
-          // și că ai APP_VM_IP, DB_PRIVATE_IP, DB_USER, DB_PASSWORD în credențiale/env vars
           def appVmIp = env.APP_VM_IP
           def sshUser = "tlavric" 
 
@@ -146,6 +142,7 @@ pipeline {
                   -e SPRING_DATASOURCE_URL="jdbc:mysql://${DB_PRIVATE_IP}:3306/petclinic" \
                   -e SPRING_DATASOURCE_USERNAME="${DB_USER}" \
                   -e SPRING_DATASOURCE_PASSWORD="${DB_PASSWORD}" \
+                  -e SPRING_JPA_HIBERNATE_DDL_AUTO=update \
                   -p 8080:8080 \
                   ${IMAGE_BASE}:${APP_VERSION}
 
