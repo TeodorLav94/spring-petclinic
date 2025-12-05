@@ -3,7 +3,7 @@ pipeline {
   options { timestamps() }
 
   environment {
-    PROJECT_ID   = 'gd-gcp-internship-devops'
+    PROJECT_ID   = 'gd-gcp-gridu-devops-t1-t2'
     GAR_REGION   = 'europe-west1'
     GAR_REPO     = 'petclinic'
     IMAGE_NAME   = 'spring-petclinic'
@@ -12,13 +12,13 @@ pipeline {
     IMAGE_BASE = "${GAR_REGION}-docker.pkg.dev/${PROJECT_ID}/${GAR_REPO}/${IMAGE_NAME}"
     
      // App VM (Terraform output)
-    APP_VM_IP    = "10.10.0.2" 
+    APP_VM_IP    = "35.187.52.211"
 
     // Cloud SQL (Terraform output)
-    DB_PRIVATE_IP = "10.20.0.3"
-    DB_USER       = "petclinicuser"
+    DB_HOST      = "34.79.134.163"
+    DB_USER      = "petclinicuser"
 
-    APP_URL       = "http://34.54.225.119"
+    APP_URL       = "136.110.157.224"
   }
 
   stages {
@@ -139,14 +139,14 @@ pipeline {
                 docker pull ${IMAGE_BASE}:${APP_VERSION}
 
                 docker run -d --name petclinic \
-                  -e SPRING_DATASOURCE_URL="jdbc:mysql://${DB_PRIVATE_IP}:3306/petclinic" \
-                  -e SPRING_DATASOURCE_USERNAME="${DB_USER}" \
-                  -e SPRING_DATASOURCE_PASSWORD="${DB_PASSWORD}" \
-                  -e SPRING_JPA_HIBERNATE_DDL_AUTO=update \
-                  -p 8080:8080 \
-                  ${IMAGE_BASE}:${APP_VERSION}
+                    -e SPRING_DATASOURCE_URL="jdbc:mysql://${DB_HOST}:3306/petclinic" \
+                    -e SPRING_DATASOURCE_USERNAME="${DB_USER}" \
+                    -e SPRING_DATASOURCE_PASSWORD="${DB_PASSWORD}" \
+                    -e SPRING_JPA_HIBERNATE_DDL_AUTO=update \
+                    -p 8080:8080 \
+                    ${IMAGE_BASE}:${APP_VERSION}
 
-                echo "Aplicatia este disponibila la: ${APP_URL}"
+                echo "Aplicatia este disponibila la: http://${APP_URL}"
               '
             """
             }
