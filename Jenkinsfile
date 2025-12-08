@@ -3,14 +3,8 @@ pipeline {
   options { timestamps() }
 
   environment {
-    PROJECT_ID   = 'gd-gcp-gridu-devops-t1-t2'
-    GAR_REGION   = 'europe-west1'
-    GAR_REPO     = 'petclinic'
-    IMAGE_NAME   = 'spring-petclinic'
-
-    // Folositor: nume complet imagine
-    IMAGE_BASE = "${GAR_REGION}-docker.pkg.dev/${PROJECT_ID}/${GAR_REPO}/${IMAGE_NAME}"
-    
+    DOCKERHUB_REPO = 'tlavric/petclinic'
+    IMAGE_BASE     = "${DOCKERHUB_REPO}"
      // App VM (Terraform output)
     APP_VM_IP    = "35.187.52.211"
 
@@ -47,31 +41,30 @@ pipeline {
     }
 
     stage('Docker Build & Push (commit tag)') {
-    steps {
-      script {
-        def gitShort = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
-        def imageTag = "${IMAGE_BASE}:${gitShort}"
+      steps {
+        script {
+          def gitShort = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
+          def imageTag = "${IMAGE_BASE}:${gitShort}"
 
-        sh """
-          set -e
+          withCredentials([usernamePassword(credentialsId: 'dockerhub-creds',
+                                            usernameVariable: 'DOCKERHUB_USER',
+                                            passwordVariable: 'DOCKERHUB_TOKEN')]) {
 
-          echo "Using image tag: ${imageTag}"
+            sh """
+              set -e
 
-          # Arată cine e autentificat, ca debug
-          gcloud auth list
+              echo "Using image tag: ${imageTag}"
 
-          # Configurează Docker să folosească Artifact Registry cu SA-ul atașat VM-ului
-          gcloud auth configure-docker ${GAR_REGION}-docker.pkg.dev -q
+              echo "\${DOCKERHUB_TOKEN}" | docker login -u "\${DOCKERHUB_USER}" --password-stdin
 
-          # Build imagine Docker
-          docker build -t ${imageTag} .
-
-          # Push imagine în Artifact Registry
-          docker push ${imageTag}
-        """
+              docker build -t ${imageTag} .
+              docker push ${imageTag}
+            """
+          }
+        }
       }
     }
-  }
+
 
     // ---------- DOAR PENTRU MAIN DE AICI ÎN JOS ----------
 
@@ -105,20 +98,26 @@ pipeline {
       //when { branch 'main' }
       steps {
         script {
-          def versionTag = env.APP_VERSION  // ex: v1.3.0
+          def versionTag = env.APP_VERSION
           def imageTag   = "${IMAGE_BASE}:${versionTag}"
 
-          sh """
-            set -e
-            # ne asigurăm că docker e configurat pt Artifact Registry și aici
-            gcloud auth configure-docker ${GAR_REGION}-docker.pkg.dev -q
+          withCredentials([usernamePassword(credentialsId: 'dockerhub-creds',
+                                            usernameVariable: 'DOCKERHUB_USER',
+                                            passwordVariable: 'DOCKERHUB_TOKEN')]) {
 
-            docker build -t ${imageTag} .
-            docker push ${imageTag}
-          """
+            sh """
+              set -e
+
+              echo "\${DOCKERHUB_TOKEN}" | docker login -u "\${DOCKERHUB_USER}" --password-stdin
+
+              docker build -t ${imageTag} .
+              docker push ${imageTag}
+            """
+          }
         }
       }
     }
+
 
     stage('Deploy to App VM') {
       //when { branch 'main' }
@@ -146,7 +145,7 @@ pipeline {
                     -p 8080:8080 \
                     ${IMAGE_BASE}:${APP_VERSION}
 
-                echo "Aplicatia este disponibila la: http://${APP_URL}"
+                echo "Aplicatia available at: ${APP_URL}"
               '
             """
             }
