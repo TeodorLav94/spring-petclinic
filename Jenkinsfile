@@ -6,7 +6,7 @@ pipeline {
     DOCKERHUB_REPO = 'tlavric/petclinic'
     IMAGE_BASE     = "${DOCKERHUB_REPO}"
      // App VM (Terraform output)
-    APP_VM_IP    = "35.187.52.211"
+    APP_VM_IP    = "10.10.0.3"
 
     // Cloud SQL (Terraform output)
     DB_HOST      = "34.79.134.163"
