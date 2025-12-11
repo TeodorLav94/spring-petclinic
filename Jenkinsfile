@@ -15,48 +15,6 @@ pipeline {
       }
     }
 
-    stage('Checkout Infra (for Terraform outputs)') {
-      steps {
-        dir('infra-terraform') {
-          git url: 'https://github.com/TeodorLav94/infra-terrafrom.git', branch: 'main'
-        }
-      }
-    }
-
-    stage('Load Infra Outputs') {
-      steps {
-        script {
-          dir('infra-terraform/jenkins') {
-            sh 'terraform init -input=false'
-
-            env.DB_HOST = sh(
-              returnStdout: true,
-              script: 'terraform output -raw db_public_ip'
-            ).trim()
-          }
-
-          dir('infra-terraform/app') {
-            sh 'terraform init -input=false'
-
-            env.APP_VM_IP = sh(
-              returnStdout: true,
-              script: 'terraform output -raw app_vm_internal_ip'
-            ).trim()
-
-            env.APP_URL = sh(
-              returnStdout: true,
-              script: 'terraform output -raw app_url'
-            ).trim()
-          }
-
-          echo "Loaded infra outputs:"
-          echo "  APP_VM_IP = ${env.APP_VM_IP}"
-          echo "  DB_HOST   = ${env.DB_HOST}"
-          echo "  APP_URL   = ${env.APP_URL}"
-        }
-      }
-    }
-
     stage('Static Code Analysis') {
       steps {
         sh 'mvn -B -DskipTests=true verify'
@@ -144,6 +102,48 @@ pipeline {
               docker push ${imageTag}
             """
           }
+        }
+      }
+    }
+
+    stage('Checkout Infra (for Terraform outputs)') {
+      steps {
+        dir('infra-terraform') {
+          git url: 'https://github.com/TeodorLav94/infra-terrafrom.git', branch: 'main'
+        }
+      }
+    }
+
+    stage('Load Infra Outputs') {
+      steps {
+        script {
+          dir('infra-terraform/jenkins') {
+            sh 'terraform init -input=false'
+
+            env.DB_HOST = sh(
+              returnStdout: true,
+              script: 'terraform output -raw db_public_ip'
+            ).trim()
+          }
+
+          dir('infra-terraform/app') {
+            sh 'terraform init -input=false'
+
+            env.APP_VM_IP = sh(
+              returnStdout: true,
+              script: 'terraform output -raw app_vm_internal_ip'
+            ).trim()
+
+            env.APP_URL = sh(
+              returnStdout: true,
+              script: 'terraform output -raw app_url'
+            ).trim()
+          }
+
+          echo "Loaded infra outputs:"
+          echo "  APP_VM_IP = ${env.APP_VM_IP}"
+          echo "  DB_HOST   = ${env.DB_HOST}"
+          echo "  APP_URL   = ${env.APP_URL}"
         }
       }
     }
