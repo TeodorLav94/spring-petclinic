@@ -5,20 +5,55 @@ pipeline {
   environment {
     DOCKERHUB_REPO = 'tlavric/petclinic'
     IMAGE_BASE     = "${DOCKERHUB_REPO}"
-     // App VM (Terraform output)
-    APP_VM_IP    = "10.10.0.3"
-
-    // Cloud SQL (Terraform output)
-    DB_HOST      = "34.79.134.163"
-    DB_USER      = "petclinicuser"
-
-    APP_URL       = "136.110.157.224"
+    DB_USER        = "petclinicuser"   
   }
 
   stages {
     stage('Checkout') {
       steps {
         checkout scm
+      }
+    }
+
+    stage('Checkout Infra (for Terraform outputs)') {
+      steps {
+        dir('infra-terraform') {
+          git url: 'https://github.com/TeodorLav94/infra-terrafrom.git', branch: 'main'
+        }
+      }
+    }
+
+    stage('Load Infra Outputs') {
+      steps {
+        script {
+          dir('infra-terraform/jenkins') {
+            sh 'terraform init -input=false'
+
+            env.DB_HOST = sh(
+              returnStdout: true,
+              script: 'terraform output -raw db_public_ip'
+            ).trim()
+          }
+
+          dir('infra-terraform/app') {
+            sh 'terraform init -input=false'
+
+            env.APP_VM_IP = sh(
+              returnStdout: true,
+              script: 'terraform output -raw app_vm_internal_ip'
+            ).trim()
+
+            env.APP_URL = sh(
+              returnStdout: true,
+              script: 'terraform output -raw app_url'
+            ).trim()
+          }
+
+          echo "Loaded infra outputs:"
+          echo "  APP_VM_IP = ${env.APP_VM_IP}"
+          echo "  DB_HOST   = ${env.DB_HOST}"
+          echo "  APP_URL   = ${env.APP_URL}"
+        }
       }
     }
 
@@ -65,11 +100,7 @@ pipeline {
       }
     }
 
-
-    // ---------- DOAR PENTRU MAIN DE AICI ÎN JOS ----------
-
     stage('Semantic Versioning & Git Tag') {
-    //when { branch 'main' }
     steps {
       script {
         withCredentials([usernamePassword(credentialsId: 'github-creds',
@@ -95,7 +126,6 @@ pipeline {
 
 
     stage('Docker Build & Push (release tag)') {
-      //when { branch 'main' }
       steps {
         script {
           def versionTag = env.APP_VERSION
@@ -118,20 +148,15 @@ pipeline {
       }
     }
 
-
     stage('Deploy to App VM') {
-      //when { branch 'main' }
+     // when { branch 'main' }   
       steps {
         script {
           input message: "Deploy version ${env.APP_VERSION} to production?"
-          def appVmIp = env.APP_VM_IP
-          def sshUser = "tlavric" 
 
-          sshagent(credentials: ['app-vm-ssh']) {
-            withCredentials([string(credentialsId: 'petclinic-db-password', variable: 'DB_PASSWORD')]) {
-
+          withCredentials([string(credentialsId: 'petclinic-db-password', variable: 'DB_PASSWORD')]) {
             sh """
-              ssh -o StrictHostKeyChecking=no ${sshUser}@${appVmIp} '
+              ssh -o StrictHostKeyChecking=no tlavric@${APP_VM_IP} '
                 docker stop petclinic || true
                 docker rm petclinic || true
 
@@ -145,13 +170,13 @@ pipeline {
                     -p 8080:8080 \
                     ${IMAGE_BASE}:${APP_VERSION}
 
-                echo "Aplicatia available at: ${APP_URL}"
+                echo "App available at: ${APP_URL}"
               '
             """
-            }
           }
         }
       }
     }
+
   }
 }
