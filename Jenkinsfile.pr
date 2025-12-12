@@ -1,0 +1,66 @@
+pipeline {
+  agent { label 'docker' }
+  options { timestamps() }
+
+  environment {
+    DOCKERHUB_REPO = 'tlavric/petclinic'
+    IMAGE_BASE     = "${DOCKERHUB_REPO}"
+  }
+
+  stages {
+    stage('Clean Workspace') {
+          steps {
+            deleteDir()
+          }
+        }
+
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+
+    stage('Static Code Analysis') {
+      steps {
+        sh 'mvn -B -DskipTests=true verify'
+      }
+    }
+
+    stage('Tests') {
+      steps {
+        sh 'mvn -B test'
+      }
+    }
+
+    stage('Build Jar') {
+      steps {
+        sh 'mvn -B package -DskipTests'
+      }
+    }
+
+    stage('Docker Build & Push (commit tag)') {
+      steps {
+        script {
+          def gitShort = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
+          def imageTag = "${IMAGE_BASE}:${gitShort}"
+
+          withCredentials([usernamePassword(credentialsId: 'dockerhub-creds',
+                                            usernameVariable: 'DOCKERHUB_USER',
+                                            passwordVariable: 'DOCKERHUB_TOKEN')]) {
+
+            sh """
+              set -e
+
+              echo "Using image tag: ${imageTag}"
+
+              echo "\${DOCKERHUB_TOKEN}" | docker login -u "\${DOCKERHUB_USER}" --password-stdin
+
+              docker build -t ${imageTag} .
+              docker push ${imageTag}
+            """
+          }
+        }
+      }
+    }
+  }
+}
