@@ -39,31 +39,6 @@ pipeline {
       }
     }
 
-    stage('Docker Build & Push (commit tag)') {
-      steps {
-        script {
-          def gitShort = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
-          def imageTag = "${IMAGE_BASE}:${gitShort}"
-
-          withCredentials([usernamePassword(credentialsId: 'dockerhub-creds',
-                                            usernameVariable: 'DOCKERHUB_USER',
-                                            passwordVariable: 'DOCKERHUB_TOKEN')]) {
-
-            sh """
-              set -e
-
-              echo "Using image tag: ${imageTag}"
-
-              echo "\${DOCKERHUB_TOKEN}" | docker login -u "\${DOCKERHUB_USER}" --password-stdin
-
-              docker build -t ${imageTag} .
-              docker push ${imageTag}
-            """
-          }
-        }
-      }
-    }
-
     stage('Semantic Versioning & Git Tag') {
     steps {
       script {
