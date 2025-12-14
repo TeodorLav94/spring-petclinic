@@ -56,7 +56,6 @@ pipeline {
             python3 scripts/bump_version.py
           """
         }
-
         env.APP_VERSION = sh(returnStdout: true, script: 'cat .version').trim()
         echo "New app version: ${env.APP_VERSION}"
       }
