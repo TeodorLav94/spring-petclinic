@@ -56,7 +56,6 @@ pipeline {
     }
 
     stage('Docker Build & Push (commit SHA tag)') {
-      // rulează pe orice branch + PR (artefact identificabil)
       steps {
         script {
           def imageTag = "${IMAGE_BASE}:${env.GIT_SHA}"
@@ -81,7 +80,7 @@ pipeline {
       when {
         allOf {
           branch 'main'
-          expression { return env.CHANGE_ID == null } // nu tag-ui din PR build
+          expression { return env.CHANGE_ID == null } 
         }
       }
       steps {
