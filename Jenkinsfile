@@ -141,7 +141,7 @@ pipeline {
       steps {
         copyArtifacts(
           projectName: 'infra-terraform',
-          selector: [$class: 'LastCompletedBuildSelector'],
+          selector: [$class: 'StatusBuildSelector', stable: true],
           filter: 'infra-outputs.env'
         )
 
