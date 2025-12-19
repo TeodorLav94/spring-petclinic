@@ -107,7 +107,7 @@ pipeline {
       }
     }
 
-    stage('Docker Build & Push (release tag - main only)') {
+    stage('Docker Build & Push (release tag-main only)') {
       when {
         allOf {
           branch 'main'
