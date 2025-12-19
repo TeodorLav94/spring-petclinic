@@ -160,33 +160,33 @@ pipeline {
 
 
     stage('Deploy to App VM (manual, main only)') {
-      when {
-        expression { return env.DEPLOY_ALLOWED == "true" }
-      }
+      when { expression { return env.DEPLOY_ALLOWED == "true" } }
       steps {
         script {
           input message: "Deploy version ${env.APP_VERSION} to production?"
 
           withCredentials([string(credentialsId: 'petclinic-db-password', variable: 'DB_PASSWORD')]) {
-            sh """
-              set -e
-              ssh -o StrictHostKeyChecking=no tlavric@${APP_VM_IP} '
-                docker stop petclinic || true
-                docker rm petclinic || true
+            sshagent(credentials: ['app-vm-ssh-key']) {
+              sh """
+                set -e
+                ssh -o StrictHostKeyChecking=no tlavric@${APP_VM_IP} '
+                  docker stop petclinic || true
+                  docker rm petclinic || true
 
-                docker pull ${IMAGE_BASE}:${APP_VERSION}
+                  docker pull ${IMAGE_BASE}:${APP_VERSION}
 
-                docker run -d --name petclinic \
-                  -e SPRING_DATASOURCE_URL="jdbc:mysql://${DB_HOST}:3306/petclinic" \
-                  -e SPRING_DATASOURCE_USERNAME="${DB_USER}" \
-                  -e SPRING_DATASOURCE_PASSWORD="${DB_PASSWORD}" \
-                  -e SPRING_JPA_HIBERNATE_DDL_AUTO=update \
-                  -p 8080:8080 \
-                  ${IMAGE_BASE}:${APP_VERSION}
+                  docker run -d --name petclinic \
+                    -e SPRING_DATASOURCE_URL="jdbc:mysql://${DB_HOST}:3306/petclinic" \
+                    -e SPRING_DATASOURCE_USERNAME="${DB_USER}" \
+                    -e SPRING_DATASOURCE_PASSWORD="${DB_PASSWORD}" \
+                    -e SPRING_JPA_HIBERNATE_DDL_AUTO=update \
+                    -p 8080:8080 \
+                    ${IMAGE_BASE}:${APP_VERSION}
 
-                echo "App available at: ${APP_URL}"
-              '
-            """
+                  echo "App available at: ${APP_URL}"
+                '
+              """
+            }
           }
         }
       }
