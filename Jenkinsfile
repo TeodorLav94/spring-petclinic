@@ -37,7 +37,7 @@ pipeline {
       }
     }
 
-    stage('Static Code Analysis') {
+    stage('Static CodeAnalysis') {
       steps {
         sh 'mvn -B -DskipTests=true verify'
       }
